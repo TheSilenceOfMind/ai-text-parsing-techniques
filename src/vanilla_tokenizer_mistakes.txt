@@ -1,0 +1,14 @@
+Москва, ул. Б.Ордынка, д.5,кв.7
+{3a + b = 12; 
+@Noname
+диван-кровать - предмет меблировки.
+- "цуфц 43ощ0буек9	1"
+стерезис - свое иное формы.
+import string
+table = str.maketrans('', '', string.punctuation)
+stripped = [w.translate(table) for w in tokens]
+# remove remaining tokens that are not alphabetic
+words = [word for word in stripped if word.isalpha()]
+# filter out stop words
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words('english'))
