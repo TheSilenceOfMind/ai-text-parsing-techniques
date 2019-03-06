@@ -8,25 +8,27 @@
 #   4. present our set of tokens
 
 import re
+import string
 
 filename = './chemistry_text.txt'
 file = open(filename, 'rt')
 text = file.read()
 file.close()
 
-open_braces = ['(', '[', '{', '«', '\'', '"']
-close_braces = [')', ']', '}', '»', '\'', '"']
-measurements_suffixes = ['°C', 'МПа', 'Дж/моль·K', 'г', 'К', 'кДж/моль']
 quotes = ['\'', '"']
+open_braces = ['(', '[', '{', '«'] + quotes
+close_braces = [')', ']', '}', '»'] + quotes
+measurements_suffixes = ['°C', 'МПа', 'Дж/моль·K', 'г', 'К', 'кДж/моль', 'а.е.м.']
 
 
 def join_numbers_with_measurements(input_tokens):
     output = []
     for token in input_tokens:
         # determine the number-characteristics
-        if token in measurements_suffixes and re.findall('^[+-]?\d+[.,]?\d*$', output[-1]):  # match any number
+        # match any number and range (+30, -20—+100, etc.)
+        if token in measurements_suffixes and re.findall('^[+-]?\d+[.,]?\d*—?[+-]?\d+[.,]?\d*$', output[-1]):
             output[-1] += token
-            print(output[-1])
+            # print(output[-1])
         else:
             output.append(token)
     return output
@@ -50,12 +52,13 @@ def join_everything_in_quotes(input_tokens):
     return output
 
 
-def join_to_context_related_tokens(input_tokens):
+def context_join(input_tokens):
     """
     The function joins
         + formulas (started with letter and has digits, other letters, dash)
         + numbers: digits separated with commas and the measurement characteristics (celsius, pascal and so on)
-        - everything in quotes (', ")
+        + everything in quotes (', ")
+        + а.е.м.
 
     :param input_tokens:
     :return: new list of "joined" tokens
@@ -87,7 +90,15 @@ def separate_braces(tokens):
     return out
 
 
+def remove_punctuation(tokens):
+    output = []
+    for token in tokens:
+        if token not in string.punctuation and token not in open_braces + close_braces + ['—']:
+            output.append(token)
+    return output
+
+
 # text = '"этиловый спирт"'
 splitted_text = separate_braces(re.split('\s+', text))
-rejoined_text = join_to_context_related_tokens(splitted_text)
-print(join_everything_in_quotes(splitted_text))
+rejoined_text = context_join(splitted_text)
+print(remove_punctuation(rejoined_text))
