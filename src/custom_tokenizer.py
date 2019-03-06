@@ -1,10 +1,10 @@
 # how do we tokenize text:
 #   1. split by delimiters to the smallest particles
 #   2. join context-important text to one token
-#       + formulas (started with letter and has digits, other letters, dash)
+#       - formulas (started with letter and has digits, other letters, dash)
 #       - numbers: digits separated with commas and the measurement characteristics (celsius, pascal and so on)
 #       - everything in quotes (', ")
-#   (3.) remove commas, dots, etc.
+#   3. remove commas, dots, etc.
 #   4. present our set of tokens
 
 import re
@@ -14,21 +14,13 @@ file = open(filename, 'rt')
 text = file.read()
 file.close()
 
-open_braces = ['(', '[', '{', '«']
-close_braces = [')', ']', '}', '»']
-measurements_suffixes = ['°C', 'МПа', 'Дж/моль·K', 'г', 'K', 'кДж/моль']
+open_braces = ['(', '[', '{', '«', '\'', '"']
+close_braces = [')', ']', '}', '»', '\'', '"']
+measurements_suffixes = ['°C', 'МПа', 'Дж/моль·K', 'г', 'К', 'кДж/моль']
+quotes = ['\'', '"']
 
 
-def join_to_context_related_tokens(input_tokens):
-    """
-    The function joins
-        - formulas (started with letter and has digits, other letters, dash)
-        - numbers: digits separated with commas and the measurement characteristics (celsius, pascal and so on)
-        - everything in quotes (', ")
-
-    :param input_tokens:
-    :return: new list of "joined" tokens
-    """
+def join_numbers_with_measurements(input_tokens):
     output = []
     for token in input_tokens:
         # determine the number-characteristics
@@ -38,7 +30,38 @@ def join_to_context_related_tokens(input_tokens):
         else:
             output.append(token)
     return output
-    # for token in input_tokens:
+
+
+def join_everything_in_quotes(input_tokens):
+    output = []
+    within_quotes = 0
+    for token in input_tokens:
+        if token in quotes:
+            output.append(token)
+            within_quotes = (within_quotes + 1) % 2
+        else:
+            if not within_quotes:
+                output.append(token)
+            else:  # are within quotes
+                if output[-1] in quotes:
+                    output.append(token)
+                else:
+                    output[-1] += ' ' + token
+    return output
+
+
+def join_to_context_related_tokens(input_tokens):
+    """
+    The function joins
+        + formulas (started with letter and has digits, other letters, dash)
+        + numbers: digits separated with commas and the measurement characteristics (celsius, pascal and so on)
+        - everything in quotes (', ")
+
+    :param input_tokens:
+    :return: new list of "joined" tokens
+    """
+    output = join_everything_in_quotes(join_numbers_with_measurements(input_tokens))
+    return output
 
 
 def separate_braces(tokens):
@@ -64,7 +87,7 @@ def separate_braces(tokens):
     return out
 
 
+# text = '"этиловый спирт"'
 splitted_text = separate_braces(re.split('\s+', text))
-print(splitted_text)
 rejoined_text = join_to_context_related_tokens(splitted_text)
-print(rejoined_text)
+print(join_everything_in_quotes(splitted_text))
