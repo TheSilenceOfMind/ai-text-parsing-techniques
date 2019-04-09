@@ -2,6 +2,8 @@
 ru_ar_cut*.txt
 mystem
 lemmatization_result.txt
+resources/
+src/task2/resources
 
 # idea
 .idea/
